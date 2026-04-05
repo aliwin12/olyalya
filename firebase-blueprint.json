@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "booking": {
+      "title": "Booking",
+      "description": "A haircut booking record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user (optional for guests)" },
+        "userName": { "type": "string", "description": "Name of the client" },
+        "userEmail": { "type": "string", "description": "Email of the client" },
+        "userPhone": { "type": "string", "description": "Phone number of the client" },
+        "date": { "type": "string", "format": "date", "description": "Date of the booking (YYYY-MM-DD)" },
+        "time": { "type": "string", "description": "Time of the booking (HH:MM)" },
+        "service": { "type": "string", "description": "Type of haircut or service" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"], "description": "Current status of the booking" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the booking was created" }
+      },
+      "required": ["userName", "userPhone", "date", "time", "service", "status"]
+    },
+    "user": {
+      "title": "User",
+      "description": "User profile and role",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "bookings/{bookingId}": {
+      "schema": "booking",
+      "description": "Haircut bookings"
+    },
+    "users/{userId}": {
+      "schema": "user",
+      "description": "User profile data"
+    }
+  }
+}

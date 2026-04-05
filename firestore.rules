@@ -1,0 +1,99 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId}
+// Fields:
+//   - email: string (required)
+//   - displayName: string (optional)
+//   - role: string (required, 'user' | 'admin')
+//
+// Collection: bookings
+// Document ID: {bookingId}
+// Fields:
+//   - userId: string (required)
+//   - userName: string (optional)
+//   - userEmail: string (optional)
+//   - date: string (required, YYYY-MM-DD)
+//   - time: string (required, HH:MM)
+//   - service: string (required)
+//   - status: string (required, 'active' | 'completed' | 'cancelled')
+//   - createdAt: string (required, ISO 8601)
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "bubinadubina5@gmail.com" && request.auth.token.email_verified == true) ||
+        (request.auth.token.email.matches(".*olgatokareva.*") && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isHardcodedAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "bubinadubina5@gmail.com" && request.auth.token.email_verified == true) ||
+        (request.auth.token.email.matches(".*olgatokareva.*") && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^[0-9]{4}-[0-9]{2}-[0-9]{2}$");
+    }
+
+    function isValidTime(timeStr) {
+      return timeStr is string && timeStr.matches("^[0-9]{2}:[0-9]{2}$");
+    }
+
+    function isValidStatus(status) {
+      return status in ['pending', 'accepted', 'rejected'];
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && 
+                      isValidEmail(request.resource.data.email) &&
+                      (request.resource.data.role == 'user' || (request.resource.data.role == 'admin' && isHardcodedAdmin()));
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
+    }
+
+    match /bookings/{bookingId} {
+      allow get: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid) || (resource.data.userId == null);
+      allow list: if isAdmin() || (isAuthenticated() && request.query.limit <= 100); // Allow list for authenticated users
+      allow create: if request.resource.data.status == 'pending' &&
+                      request.resource.data.userName is string &&
+                      request.resource.data.userPhone is string;
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid) || (resource.data.userId == null);
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
