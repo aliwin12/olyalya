@@ -949,6 +949,13 @@ function AdminView({ bookings }: { bookings: Booking[] }) {
                               <CheckCircle className="w-5 h-5" />
                             </button>
                             <button 
+                              onClick={() => updateStatus(booking.id, 'rejected')}
+                              className="p-2 text-stone-400 hover:text-amber-600 transition-colors"
+                              title="Отклонить"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                            <button 
                               onClick={() => setBookingToDelete(booking.id)}
                               className="p-2 text-stone-400 hover:text-red-600 transition-colors"
                               title="Удалить (без следа)"
@@ -1015,12 +1022,20 @@ function AdminView({ bookings }: { bookings: Booking[] }) {
 
                 <div className="flex justify-end gap-3 pt-2">
                   {booking.status === 'pending' && (
-                    <button 
-                      onClick={() => updateStatus(booking.id, 'accepted')}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold"
-                    >
-                      <CheckCircle className="w-4 h-4" /> Принять
-                    </button>
+                    <>
+                      <button 
+                        onClick={() => updateStatus(booking.id, 'accepted')}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold"
+                      >
+                        <CheckCircle className="w-4 h-4" /> Принять
+                      </button>
+                      <button 
+                        onClick={() => updateStatus(booking.id, 'rejected')}
+                        className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-xs font-bold"
+                      >
+                        <XCircle className="w-4 h-4" /> Отклонить
+                      </button>
+                    </>
                   )}
                   <button 
                     onClick={() => setBookingToDelete(booking.id)}
